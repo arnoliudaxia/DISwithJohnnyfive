@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        var isCollect=true;
+        var isDebug=false;
+        var senshowdata=[
+            {
+                name:'A0',
+                type: 'line',
+                data:[]
+            },
+            {
+                name:'A1',
+                type: 'line',
+                data:[]
+            },
+            {
+                name:'A2',
+                type: 'line',
+                data:[]
+            },
+            {
+                name:'A3',
+                type: 'line',
+                data:[]
+            },
+            {
+                name:'A4',
+                type: 'line',
+                data:[]
+            },
+            {
+                name:'A5',
+                type: 'line',
+                data:[]
+            }
+        ];
+        function startCollect() {
+            isCollect=true;
+        }
+        function stopCollect() {
+            isCollect=false;
+        }
+        function dataClear() {
+            for(let item of senshowdata){
+                item.data=[];
+            }
+        }
+    </script>
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <script src="./javascripts/echarts.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+<div id="main" style="width: 600px;height:400px;"></div>
+<div id="chartController"><button onclick="startCollect()">开始采集</button><button onclick="stopCollect()">停止采集</button><button onclick="dataClear()">数据清空</button></div>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    // import * as echarts from "./echarts";
+
+    var myChart = echarts.init(document.getElementById('main'));
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: '模拟输入'
+        },
+        tooltip: {},
+        legend: {
+        },
+        xAxis: {type: 'time'},
+        yAxis: {min:0,max:1023},
+        series: senshowdata,
+        dataZoom:[
+            {
+                type:"slider",
+                start:0,
+                end:100
+            }
+        ]
+    };
+
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+
+    //测试动态数据刷新-
+    // function randomdata(){
+    //     var date=new Date();
+    //     return [date.getMinutes() + ":" + date.getSeconds()+":"+date.getMilliseconds(), Math.floor(Math.random()*30)];
+    // }
+    // setInterval(function(){
+    //     option.dataset.source.push(randomdata());
+    //     myChart.setOption(option);
+
+    // },500)
+</script>
+
+<script>
+    var socket=io.connect();
+    socket.on('sensorDataUpdate',function (data) {
+       //console.log(data);
+        if(isCollect) {
+            //option.xAxis.data.push(new Date());
+            console.log(data);
+            let time=new Date();
+            for(let i=0;i<6;i++)
+            {
+                senshowdata[i].data.push([time,data["senA"+i]]);
+            }
+            option.series=senshowdata;
+            // option.series[0].data.push([time,data.senA0]);
+            // option.series[1].data.push([time,data.senA1]);
+            //option.dataset.source.push([new Date(), data.senA0,data.senA1]);
+            myChart.setOption(option);
+        }
+    });
+</script>
+</body>
+</html>
